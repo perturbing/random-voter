@@ -71,13 +71,12 @@ dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlu
 printDataToJSON :: (PlutusV3.ToData a) => a -> IO ()
 printDataToJSON = putStrLn . BS8.unpack . prettyPrintJSON . dataToJSON
 
-initTxOutRef :: PlutusV3.TxOutRef
-initTxOutRef =
-    PlutusV3.TxOutRef
-        ((PlutusV3.TxId . P.integerToByteString BigEndian 32) 0x7f6a7f48d447b1ae63ec2b8b1a623cca4d36838f8010e545c565c2d26ccb70f5)
-        1
+-- this is a mock VRF public key
+vrfPubKey :: PlutusV3.BuiltinByteString
+vrfPubKey = P.integerToByteString BigEndian 32 0x7f6a7f48d447b1ae63ec2b8b1a623cca4d36838f8010e545c565c2d26ccb70f5
 
 main :: IO ()
 main = do
     writeCodeToFile PlutusScriptV3 "./assets/V3/alwaysTrueMint.plutus" alwaysTrueMintCode
+    let appliedRandomVoteCode = randomVoteCode `unsafeApplyCode` PlutusTx.liftCodeDef (PlutusV3.toBuiltinData vrfPubKey)
     writeCodeToFile PlutusScriptV3 "./assets/V3/randomVoteCC.plutus" randomVoteCode

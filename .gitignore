@@ -21,3 +21,9 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+local-testnet/example
+local-testnet/logs
+.pre-commit-config.yaml
+
+# nix
+result*
