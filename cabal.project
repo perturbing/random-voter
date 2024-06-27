@@ -13,3 +13,4 @@ index-state:
   , cardano-haskell-packages 2024-06-20T00:00:00Z
 
 packages: plutus-scripts
+          random-voter-cli
