@@ -36,7 +36,7 @@ import qualified PlutusTx.Builtins as PlutusTx
 
 import Scripts (
     alwaysTrueMintCode,
-    randomVoteCode,
+    randomVoterCode,
  )
 
 import Data.Aeson (Value, decode)
@@ -78,5 +78,5 @@ vrfPubKey = P.integerToByteString BigEndian 32 0x7f6a7f48d447b1ae63ec2b8b1a623cc
 main :: IO ()
 main = do
     writeCodeToFile PlutusScriptV3 "./assets/V3/alwaysTrueMint.plutus" alwaysTrueMintCode
-    let appliedRandomVoteCode = randomVoteCode `unsafeApplyCode` PlutusTx.liftCodeDef (PlutusV3.toBuiltinData vrfPubKey)
-    writeCodeToFile PlutusScriptV3 "./assets/V3/randomVoteCC.plutus" randomVoteCode
+    let appliedRandomVoterCode = randomVoterCode `unsafeApplyCode` PlutusTx.liftCodeDef (PlutusV3.toBuiltinData vrfPubKey)
+    writeCodeToFile PlutusScriptV3 "./assets/V3/randomVoter.plutus" appliedRandomVoterCode

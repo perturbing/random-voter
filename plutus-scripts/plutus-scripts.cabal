@@ -5,7 +5,7 @@ license:       Apache-2.0
 author:        Thomas Vellekoop
 maintainer:    thomas.vellekoop@iohk.io
 synopsis:
-  "A plutus script that implements a CC member that randomly votes on governance actions"
+  "A plutus script that implements a Cardano governance voter (CC/DREP) that deterministically randomly votes on a given governance actions."
 
 build-type:    Simple
 

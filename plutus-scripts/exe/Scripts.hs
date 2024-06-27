@@ -72,22 +72,41 @@ import PlutusTx.Prelude (
  )
 import Shared (wrapFourArgs, wrapOneArg, wrapThreeArgs, wrapTwoArgs)
 
--- see https://gist.github.com/perturbing/ebde137286944b30b1de2277cfaf1c5a
-{-# INLINEABLE randomVoteCC #-}
-randomVoteCC :: BuiltinByteString -> ScriptContext -> Bool
-randomVoteCC vrfPubKey ctx = case scriptContextScriptInfo ctx of
+-- This is a simple voting script that allows for a random vote to be cast
+-- by two of the tree kinds of voters: "CC", "DREP" (not a stake pool).
+-- It is parameterized by a VRF public key of the voter.
+-- For intuition, see the VRF as a keyed hash function.
+-- For a given input, a public key can hash the input to create a
+-- random hash output. This hash is unique to the public key, and the
+-- correctness of the hash can be verified by anyone with the public key
+-- and the input with a proof (gamma, c, s).
+{-# INLINEABLE randomVoter #-}
+randomVoter :: BuiltinByteString -> ScriptContext -> Bool
+randomVoter vrfPubKey ctx = case scriptContextScriptInfo ctx of
+    -- First we check that the script is used to vote
+    -- Given its 'voter', we lookup on what this voter is voting
     VotingScript voter -> case lookup voter (txInfoVotes txInfo) of
-        -- This is a Map GovernanceActionId Vote
+        -- This is the Map GovernanceActionId Vote for our voter
+        -- We check that the redeemer is a tuple of (output, gamma, c, s)
+        -- Which is a proof for a single random vote
         Just votes -> case redeemer of
             Just (output, gammaBS, c, s) ->
-                let ((govAction, vote) : xs) = toList votes
+                let
+                    -- We only allow for one vote per transaction (for simplicity)
+                    ((govAction, vote) : xs) = toList votes
+                    -- create a byte string from the txId and the index of the vote
                     input = (getTxId . gaidTxId) govAction <> integerToByteString BigEndian 0 (gaidGovActionIx govAction)
+                    -- map our random hash output to a vote (Yes, No, Abstain) with chance 1/3 for each
                     randomInt = byteStringToInteger BigEndian output `modulo` 3
                     randomVote
                         | randomInt == 0 = VoteYes
                         | randomInt == 1 = VoteNo
                         | otherwise = Abstain
-                 in null xs && checkVRF input output (gammaBS, c, s) && vote == randomVote
+                 in
+                    -- Here we check that one vote is cast in the transaction
+                    -- The cast vote is random and the proof is correct
+                    -- given our input and hard-coded VRF public key
+                    null xs && checkVRF input output (gammaBS, c, s) && vote == randomVote
             Nothing -> False
         Nothing -> False
     _ -> False
@@ -95,6 +114,7 @@ randomVoteCC vrfPubKey ctx = case scriptContextScriptInfo ctx of
     txInfo = scriptContextTxInfo ctx
     redeemer :: Maybe (BuiltinByteString, BuiltinByteString, Integer, Integer)
     redeemer = fromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
+    -- see https://gist.github.com/perturbing/ebde137286944b30b1de2277cfaf1c5a
     checkVRF :: BuiltinByteString -> BuiltinByteString -> (BuiltinByteString, Integer, Integer) -> Bool
     checkVRF input output (gammaBS, c, s) =
         let pub = bls12_381_G1_uncompress vrfPubKey
@@ -110,12 +130,12 @@ randomVoteCC vrfPubKey ctx = case scriptContextScriptInfo ctx of
                 && output
                 == (sha2_256 . bls12_381_G1_compress . bls12_381_G1_scalarMul f) gamma
 
-{-# INLINEABLE wrappedRandomVoteCC #-}
-wrappedRandomVoteCC :: BuiltinData -> BuiltinData -> BuiltinUnit
-wrappedRandomVoteCC = wrapTwoArgs randomVoteCC
+{-# INLINEABLE wrappedRandomVoter #-}
+wrappedRandomVoter :: BuiltinData -> BuiltinData -> BuiltinUnit
+wrappedRandomVoter = wrapTwoArgs randomVoter
 
-randomVoteCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
-randomVoteCode = $$(compile [||wrappedRandomVoteCC||])
+randomVoterCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+randomVoterCode = $$(compile [||wrappedRandomVoter||])
 
 -- Testing purposes
 
