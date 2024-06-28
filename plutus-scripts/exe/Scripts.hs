@@ -123,12 +123,10 @@ randomVoter vrfPubKey ctx = case scriptContextScriptInfo ctx of
             u = bls12_381_G1_add (bls12_381_G1_scalarMul c pub) (bls12_381_G1_scalarMul s g1)
             h' = bls12_381_G1_hashToGroup input mempty
             v = bls12_381_G1_add (bls12_381_G1_scalarMul c gamma) (bls12_381_G1_scalarMul s h')
-            -- this is the cofactor of G1
-            f = 76329603384216526031706109802092473003
          in integerToByteString BigEndian 32 c
                 == (sha2_256 . mconcat $ bls12_381_G1_compress <$> [g1, h', pub, gamma, u, v])
                 && output
-                == (sha2_256 . bls12_381_G1_compress . bls12_381_G1_scalarMul f) gamma
+                == (sha2_256 . bls12_381_G1_compress) gamma
 
 {-# INLINEABLE wrappedRandomVoter #-}
 wrappedRandomVoter :: BuiltinData -> BuiltinData -> BuiltinUnit
