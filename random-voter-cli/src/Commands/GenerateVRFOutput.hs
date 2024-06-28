@@ -45,6 +45,7 @@ data GenerateVRFOutputCommand = GenerateVRFOutputCommand
     { keyFileName :: String
     , txId :: String
     , index :: Integer
+    , outFileName :: String
     }
 
 generateVRFOutputCommandParser :: Options.Applicative.Parser GenerateVRFOutputCommand
@@ -66,6 +67,11 @@ generateVRFOutputCommandParser =
                 <> metavar "INDEX"
                 <> help "The index of the governance action"
             )
+        <*> strOption
+            ( long "out-file"
+                <> metavar "FILE_NAME"
+                <> help "The name of the file to store the redeemer in JSON format"
+            )
 
 hexToBytes :: String -> BuiltinByteString
 hexToBytes = toBuiltin . BS.pack . hexStringToBytes . dropPrefix
@@ -81,6 +87,7 @@ runGenerateVRFOutputCommand cmd = do
     let keyFile = keyFileName cmd
         txIdAction = hexToBytes $ txId cmd
         indexAction = index cmd
+        outFile = outFileName cmd
     -- Read and decode the key pair file
     keyFileContent <- B.readFile keyFile
     let eitherKeys = eitherDecode keyFileContent :: Either String Aeson.Object
@@ -105,12 +112,17 @@ runGenerateVRFOutputCommand cmd = do
                             let input = txIdAction <> integerToByteString BigEndian 0 indexAction
                             kBs <- getRandomBytes 32 :: IO BuiltinByteString
                             let k = byteStringToInteger BigEndian kBs `modulo` 52435875175126190479447740508185965837690552500527637822603658699938581184513
-                                redeemer = runVRF privKey k (Input input)
-                            printDataToJSON redeemer
+                                (Output output, proof) = runVRF privKey k (Input input)
+                                randomInt = byteStringToInteger BigEndian output `modulo` 3
+                                randomVote
+                                    | randomInt == 0 = PlutusV3.VoteYes
+                                    | randomInt == 1 = PlutusV3.VoteNo
+                                    | otherwise = PlutusV3.Abstain
+                            print $ "You should vote '" <> show randomVote <> "' for the governance action: " <> txId cmd <> "#" <> show indexAction
+                            -- writeDataToJSON outFile (Output output, proof)
+                            writeFile outFile $ BS8.unpack . prettyPrintJSON $ dataToJSON (Output output, proof)
+                            print $ "Redeemer written to: " <> outFile
                         else print "Claimed public key does not match the one derived from the private key."
 
 dataToJSON :: (PlutusV3.ToData a) => a -> Value
 dataToJSON = scriptDataToJsonDetailedSchema . unsafeHashableScriptData . fromPlutusData . PlutusV3.toData
-
-printDataToJSON :: (PlutusV3.ToData a) => a -> IO ()
-printDataToJSON = putStrLn . BS8.unpack . prettyPrintJSON . dataToJSON
