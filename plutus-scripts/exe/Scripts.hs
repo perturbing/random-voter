@@ -124,9 +124,9 @@ randomVoter vrfPubKey ctx = case scriptContextScriptInfo ctx of
             h' = bls12_381_G1_hashToGroup input mempty
             v = bls12_381_G1_add (bls12_381_G1_scalarMul c gamma) (bls12_381_G1_scalarMul s h')
          in integerToByteString BigEndian 32 c
-                == (sha2_256 . mconcat $ bls12_381_G1_compress <$> [g1, h', pub, gamma, u, v])
+                == (sha2_256 . mconcat $ [bls12_381_G1_compressed_generator, bls12_381_G1_compress h', vrfPubKey, gammaBS, bls12_381_G1_compress u, bls12_381_G1_compress v])
                 && output
-                == (sha2_256 . bls12_381_G1_compress) gamma
+                == sha2_256 gammaBS
 
 {-# INLINEABLE wrappedRandomVoter #-}
 wrappedRandomVoter :: BuiltinData -> BuiltinData -> BuiltinUnit
