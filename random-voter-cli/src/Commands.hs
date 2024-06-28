@@ -30,7 +30,7 @@ commandParser =
                     (progDesc "Generate a VRF key pair")
                 )
             , command
-                "generate-vrf-output"
+                "generate-vrf-output-redeemer"
                 ( info
                     (GenerateVRFOutput <$> generateVRFOutputCommandParser)
                     (progDesc "Generate a VRF output and proof")

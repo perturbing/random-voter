@@ -26,16 +26,14 @@ executable random-voter-cli
     , aeson-pretty
     , base >=4.2 && <5
     , base16
+    , binary
     , bytestring
+    , cardano-api ^>=8.48.0.0
+    , cryptonite
     , directory
     , filepath
     , optparse-applicative
+    , plutus-ledger-api ^>=1.30
+    , plutus-tx ^>=1.30
+    , plutus-vrf
     , text
-
--- , cardano-api ^>=8.48.0.0
--- , plutus-core ^>=1.30
--- , plutus-ledger-api ^>=1.30
--- , plutus-tx ^>=1.30
--- , plutus-tx-plugin ^>=1.30
--- , serialise
--- , containers
