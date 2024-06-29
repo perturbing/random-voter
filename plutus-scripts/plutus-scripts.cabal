@@ -12,6 +12,7 @@ build-type:    Simple
 library
   default-language: Haskell2010
   exposed-modules:
+    Plutus.Crypto.VRF
     Scripts
     Shared
 
@@ -25,5 +26,4 @@ library
     , plutus-ledger-api ^>=1.30
     , plutus-tx ^>=1.30
     , plutus-tx-plugin ^>=1.30
-    , plutus-vrf
     , serialise

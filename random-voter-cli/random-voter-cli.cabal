@@ -36,5 +36,4 @@ executable random-voter-cli
     , plutus-ledger-api ^>=1.30
     , plutus-scripts
     , plutus-tx ^>=1.30
-    , plutus-vrf
     , text
