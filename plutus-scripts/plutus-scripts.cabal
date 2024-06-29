@@ -5,18 +5,17 @@ license:       Apache-2.0
 author:        Thomas Vellekoop
 maintainer:    thomas.vellekoop@iohk.io
 synopsis:
-  "A plutus script that implements a Cardano governance voter (CC/DREP) that deterministically randomly votes on a given governance actions."
+  "Plutus scripts that implements a Cardano governance voter (CC or DREP) that deterministically randomly votes on a given governance actions."
 
 build-type:    Simple
 
-executable write-scripts
+library
   default-language: Haskell2010
-  main-is:          Main.hs
-  other-modules:
+  exposed-modules:
     Scripts
     Shared
 
-  hs-source-dirs:   exe
+  hs-source-dirs:   src
   build-depends:
     , aeson
     , base >=4.2 && <5

@@ -133,3 +133,44 @@ wrappedRandomVoterDrep = wrapTwoArgs randomVoterDrep
 
 randomVoterDrepCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
 randomVoterDrepCode = $$(compile [||wrappedRandomVoterDrep||])
+
+{-# INLINEABLE randomVoterCC #-}
+randomVoterCC :: PubKey -> ScriptContext -> Bool
+randomVoterCC vrfPubKey ctx = case scriptContextScriptInfo ctx of
+    -- First we check that the script is used to vote
+    -- Given its 'voter', we lookup on what this voter is voting
+    VotingScript voter -> case lookup voter (txInfoVotes txInfo) of
+        -- This is the Map GovernanceActionId Vote for our voter
+        -- We check that the redeemer is a tuple of (output, gamma, c, s)
+        -- Which is a proof for a single random vote
+        Just votes -> case redeemer of
+            Just (output@(Output out), proof) ->
+                let
+                    -- We only allow for one vote per transaction (for simplicity)
+                    ((govAction, vote) : xs) = toList votes
+                    -- create a byte string from the txId and the index of the vote
+                    input = Input $ (getTxId . gaidTxId) govAction <> integerToByteString BigEndian 0 (gaidGovActionIx govAction)
+                    -- map our random hash output to a vote (Yes, No, Abstain) with chance 1/3 for each
+                    randomInt = byteStringToInteger BigEndian out `modulo` 3
+                    randomVote
+                        | randomInt == 0 = VoteYes
+                        | randomInt == 1 = VoteNo
+                        | otherwise = Abstain
+                 in
+                    -- Here we check that one vote is cast in the transaction
+                    -- The cast vote is random and the proof is correct
+                    -- given our input and hard-coded VRF public key
+                    null xs && checkVRF vrfPubKey input output proof && vote == randomVote
+            Nothing -> False
+        Nothing -> False
+  where
+    txInfo = scriptContextTxInfo ctx
+    redeemer :: Maybe (Output, Proof)
+    redeemer = fromBuiltinData . getRedeemer $ scriptContextRedeemer ctx
+
+{-# INLINEABLE wrappedRandomVoterCC #-}
+wrappedRandomVoterCC :: BuiltinData -> BuiltinData -> BuiltinUnit
+wrappedRandomVoterCC = wrapTwoArgs randomVoterCC
+
+randomVoterCCCode :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinUnit)
+randomVoterCCCode = $$(compile [||wrappedRandomVoterCC||])
