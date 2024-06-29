@@ -29,6 +29,9 @@ Note that the Drep command also requires an UTxO reference, this UTxO needs to b
 Given a governance action `fe2c99fe6bc75a9666427163d51ae7dbf5a60df40135361b7bfd53ac6c7912ec#3` you can calculate how you should vote (there is only one way, which is random but deterministic of the reference used), you can use
 ```bash
 nix run .#random-voter-cli -- generate-vrf-output-redeemer --key-pair-file my-vrf-key.json --tx-id fe2c99fe6bc75a9666427163d51ae7dbf5a60df40135361b7bfd53ac6c7912ec --index 3 --out-file redeemer.json
+```
+which will output something like
+```bash
 "You should vote 'VoteNo' for the governance action: fe2c99fe6bc75a9666427163d51ae7dbf5a60df40135361b7bfd53ac6c7912ec#3"
 "Redeemer written to: redeemer.json"
 ```
