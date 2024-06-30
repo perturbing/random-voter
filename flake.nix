@@ -29,6 +29,7 @@
       inputs.hackage.follows = "hackage";
     };
 
+    cardano-node.url = "github:input-output-hk/cardano-node/8.12.1";
   };
 
 
