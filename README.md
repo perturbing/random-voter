@@ -1,3 +1,5 @@
+NOTE THAT THIS DREP DOES NOT CORRECTLY IMPLEMENTS THE UPDATE REGISTRATION CERT, SO IF IT EXPIRES  BY NOT VOTING FOR A PERIOD, IT IS LOST FOR EVER.
+
 # random-voter
 A gimmick plutus based CC or DREP that votes random on a governance actions.
 
